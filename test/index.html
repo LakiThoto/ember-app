@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Ember gebruikerstest</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wdth,wght@75..100,400..700&display=swap">
+<style>
+/* Layout: één rustige vragenkolom. Op een breed scherm staat de app als telefoon links naast de taak;
+   op een telefoon opent de app over het hele scherm en ga je met één knop terug naar de vragen. */
+:root {
+  --bg: #e9ebee; --surface: #ffffff; --surface-2: #f2f3f5; --line: #d6d9de;
+  --fg: #1b1c1f; --fg-2: #50545b; --fg-3: #7a7e86;
+  --on-fg: #ffffff; --stage: #121315;
+  --ok: #3d8650; --warn: #a96a0c; --danger: #bf4337;
+  --font: "Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --r: 20px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121315; --surface: #1c1d20; --surface-2: #26272b; --line: #33353a;
+  --fg: #f2f2f4; --fg-2: #b0b3ba; --fg-3: #82868e;
+  --on-fg: #1b1c1f; --stage: #0b0b0c;
+  --ok: #82b98e; --warn: #f0b65a; --danger: #f2958b; color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #121315; --surface: #1c1d20; --surface-2: #26272b; --line: #33353a;
+  --fg: #f2f2f4; --fg-2: #b0b3ba; --fg-3: #82868e;
+  --on-fg: #1b1c1f; --stage: #0b0b0c;
+  --ok: #82b98e; --warn: #f0b65a; --danger: #f2958b; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 16px; line-height: 1.5; -webkit-text-size-adjust: 100%; }
+button, input, textarea { font: inherit; color: inherit; }
+h1, h2, h3 { margin: 0; text-wrap: balance; font-weight: 600; font-stretch: 88%; letter-spacing: -0.01em; }
+h1 { font-size: clamp(28px, 6vw, 36px); line-height: 1.12; }
+h2 { font-size: 20px; line-height: 1.25; }
+p { margin: 0; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+
+.wrap { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 72px; }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 20px; }
+.merk { display: flex; align-items: baseline; gap: 10px; }
+.merk b { font-weight: 700; font-stretch: 82%; font-size: 20px; letter-spacing: 0.01em; }
+.merk span { color: var(--fg-3); font-size: 14px; }
+.top-r { display: flex; align-items: center; gap: 12px; font-size: 14px; color: var(--fg-2); }
+.top-r a { text-decoration: none; padding: 6px 12px; border-radius: 999px; background: var(--surface-2); }
+.prog { display: flex; gap: 4px; margin-bottom: 28px; }
+.prog i { flex: 1; height: 3px; border-radius: 2px; background: var(--line); }
+.prog i.on { background: var(--fg); }
+
+.grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 40px; }
+.kolom { max-width: 620px; min-width: 0; display: flex; flex-direction: column; gap: 28px; }
+.grid:not(.met-app) .kolom { margin: 0 auto; }
+
+/* de app: op een telefoon een scherm dat over alles heen komt */
+.app { position: fixed; inset: 0; z-index: 50; display: none; flex-direction: column; background: var(--stage); }
+.app.open { display: flex; }
+.app iframe { flex: 1; width: 100%; border: 0; display: block; background: var(--stage); }
+.appbalk { display: flex; align-items: center; gap: 8px; padding-top: calc(env(safe-area-inset-top, 0px) + 8px); padding-bottom: 8px; padding-left: max(12px, env(safe-area-inset-left, 0px)); padding-right: max(12px, env(safe-area-inset-right, 0px)); background: #1c1d20; color: #f2f2f4; }
+.appbalk .wat { flex: 1; min-width: 0; font-size: 14px; color: #b0b3ba; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.appbalk button { border: 0; border-radius: 999px; padding: 8px 14px; font-size: 14px; cursor: pointer; background: #2c2d31; color: #f2f2f4; }
+.appbalk button.klaar { background: #f2f2f4; color: #1b1c1f; font-weight: 600; }
+.los { display: none; }
+@media (min-width: 960px) {
+  .grid.met-app { grid-template-columns: 420px minmax(0, 1fr); align-items: start; }
+  .met-app .app { display: flex; position: sticky; top: 20px; inset: auto; z-index: auto; height: min(900px, calc(100dvh - 40px)); border-radius: 28px; overflow: hidden; }
+  .met-app .app .appbalk { order: 2; background: var(--stage); justify-content: center; padding: 10px 12px 14px; }
+  .met-app .app .appbalk .wat, .met-app .app .appbalk .klaar { display: none; }
+  .open-app { display: none !important; }
+  .los { display: inline; }
+}
+
+/* de taak */
+.eyebrow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 14px; color: var(--fg-2); font-variant-numeric: tabular-nums; }
+.soort { display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px 4px 10px; border-radius: 999px; background: var(--surface); color: var(--fg); font-size: 14px; }
+.soort::before { content: ""; width: 8px; height: 8px; border-radius: 4px; background: var(--fg-3); }
+.soort.warn::before { background: var(--warn); } .soort.danger::before { background: var(--danger); } .soort.ok::before { background: var(--ok); }
+.kop { display: flex; flex-direction: column; gap: 12px; }
+.lead { font-size: 18px; color: var(--fg-2); max-width: 60ch; }
+.situatie { margin: 0; padding: 20px 22px; border-radius: var(--r); background: var(--surface); font-size: 19px; line-height: 1.45; display: flex; flex-direction: column; gap: 12px; }
+.situatie .eerder { font-size: 15px; color: var(--fg-2); }
+.situatie .daarna { font-size: 16px; color: var(--fg-2); padding-top: 12px; border-top: 1px solid var(--line); }
+.doen { margin: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+.doen div { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 12px; }
+.doen dt { color: var(--fg-3); font-size: 14px; padding-top: 1px; }
+.doen dd { margin: 0; }
+.doen code { font-family: var(--mono); font-size: 15px; background: var(--surface-2); padding: 1px 6px; border-radius: 6px; }
+@media (max-width: 480px) { .doen div { grid-template-columns: minmax(0, 1fr); gap: 2px; } }
+
+.pill { appearance: none; border: 0; border-radius: 999px; padding: 14px 24px; background: var(--fg); color: var(--on-fg); font-weight: 600; font-size: 16px; cursor: pointer; text-align: center; }
+.pill:disabled { opacity: .4; cursor: default; }
+.pill.groot { width: 100%; padding: 16px 24px; }
+.tekstknop { appearance: none; border: 0; background: none; padding: 12px 4px; color: var(--fg-2); cursor: pointer; font-size: 16px; }
+.tekstknop:hover { color: var(--fg); }
+
+/* vragen */
+.vragen { display: flex; flex-direction: column; gap: 22px; padding-top: 24px; border-top: 1px solid var(--line); }
+.vraag { display: flex; flex-direction: column; gap: 10px; border: 0; padding: 0; margin: 0; min-width: 0; }
+.vraag > label, .vraag > legend { font-weight: 500; font-size: 17px; padding: 0; }
+.vraag .hint { font-size: 14px; color: var(--fg-3); margin-top: -6px; }
+textarea, input[type="text"] { width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 14px; padding: 12px 14px; line-height: 1.45; }
+textarea { min-height: 88px; resize: vertical; }
+textarea:focus, input[type="text"]:focus { outline: 2px solid var(--fg); outline-offset: 0; border-color: transparent; }
+.opties { display: flex; flex-wrap: wrap; gap: 8px; }
+.optie { position: relative; }
+.optie input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.optie span { display: block; padding: 10px 16px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); cursor: pointer; }
+.optie input:checked + span { background: var(--fg); color: var(--on-fg); border-color: var(--fg); }
+.optie input:focus-visible + span { outline: 2px solid var(--fg); outline-offset: 2px; }
+.schaal .opties { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.schaal .optie span { text-align: center; padding: 10px 0; font-variant-numeric: tabular-nums; }
+.schaal .ends { display: flex; justify-content: space-between; font-size: 13px; color: var(--fg-3); }
+
+.stapnav { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 8px; }
+.opslag { font-size: 13px; color: var(--fg-3); }
+
+/* klaar */
+.samenvatting { margin: 0; padding: 16px; border-radius: 14px; background: var(--surface); font-family: var(--mono); font-size: 13px; line-height: 1.55; white-space: pre-wrap; max-height: 360px; overflow: auto; }
+.rij { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+
+/* resultaten */
+.res { display: flex; flex-direction: column; gap: 32px; max-width: 900px; margin: 0 auto; }
+.res .leeg { padding: 24px; border-radius: var(--r); background: var(--surface); color: var(--fg-2); }
+.tabelwrap { overflow-x: auto; border-radius: 14px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--fg-3); font-weight: 500; }
+.balk { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: var(--surface-2); min-width: 120px; }
+.balk i { display: block; height: 100%; }
+.balk .a { background: var(--ok); } .balk .b { background: var(--warn); } .balk .c { background: var(--danger); }
+.legenda { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: var(--fg-2); }
+.legenda span::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 4px; margin-right: 6px; background: currentColor; }
+.legenda .a { color: var(--ok); } .legenda .b { color: var(--warn); } .legenda .c { color: var(--danger); }
+.open-antw { display: flex; flex-direction: column; gap: 16px; }
+.open-antw h3 { font-size: 16px; }
+.open-antw ul { margin: 6px 0 0; padding-left: 18px; color: var(--fg-2); display: flex; flex-direction: column; gap: 4px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="merk"><b>Ember</b><span>Gebruikerstest</span></div>
+    <div class="top-r"><span id="stapnaam"></span><a id="naar-res" href="#resultaten" hidden>Resultaten</a></div>
+  </header>
+  <div class="prog" id="prog" aria-hidden="true"></div>
+  <main class="grid" id="grid">
+    <div class="app" id="app" aria-label="De Ember-app">
+      <div class="appbalk">
+        <span class="wat" id="app-wat"></span>
+        <button type="button" id="app-opnieuw">Begin opnieuw</button>
+        <a class="los" id="app-los" href="app/ember.html" target="_blank" rel="noopener" style="font-size:13px;color:#82868e;align-self:center;padding:0 6px">Open los</a>
+        <button type="button" class="klaar" id="app-klaar">Klaar, naar de vragen</button>
+      </div>
+      <iframe id="frame" title="Ember-app, het klikbare voorbeeld" allow="autoplay"></iframe>
+    </div>
+    <div class="kolom" id="inhoud"></div>
+  </main>
+</div>
+
+<script>
+(() => {
+  const LUKTE = { id: 'lukte', type: 'keuze', label: 'Lukte het?', opties: ['Ja, makkelijk', 'Ja, met moeite', 'Nee'] };
+  const CONTACTEN = 'We springen een paar weken vooruit. Je gebruikt Ember gewoon. Je e-bike laadt meestal \'s avonds in de schuur. Sanne en Daan, een buurman, doen mee als contact.';
+  const STAPPEN = [
+    { id: 'welkom', soort: 'intro', naam: 'Welkom', vragen: [
+      { id: 'naam', type: 'kort', label: 'Je voornaam of een code', hint: 'Mag leeg blijven.' },
+      { id: 'ebike', type: 'keuze', label: 'Heb je een e-bike?', opties: ['Ja', 'Nee, maar ik denk erover', 'Nee'] },
+      { id: 'laden', type: 'keuze', label: 'Waar laad je de accu meestal?', opties: ['Schuur', 'Garage', 'Gang of hal', 'Binnen in huis', 'Berging', 'Ergens anders'] },
+      { id: 'leeftijd', type: 'keuze', label: 'Je leeftijd', opties: ['Jonger dan 30', '30 tot 45', '45 tot 60', '60 of ouder'] },
+    ] },
+    { id: 't1', soort: 'taak', nr: 1, label: 'Kennismaken', titel: 'Eerste indruk', start: 'A1',
+      situatie: 'Je hebt Ember gekocht voor je e-bike. In het doosje zit een kaartje met een link naar de app. Die heb je net geopend.',
+      doen: 'Kijk naar het scherm. Tik nog nergens op.',
+      klaar: 'Na een paar seconden zie je het welkomstscherm.',
+      vragen: [
+        { id: 'doet', type: 'open', label: 'Wat denk je dat Ember doet?' },
+        { id: 'mis', type: 'open', label: 'Wat verwacht je dat er gebeurt als er iets mis is met je accu?' },
+      ] },
+    { id: 't2', soort: 'taak', nr: 2, label: 'Instellen', titel: 'Stel Ember in', start: 'O01',
+      situatie: 'Je wilt Ember gaan gebruiken. Ember en de sticker liggen voor je, en je fiets staat naast je.',
+      doen: 'Maak een account aan en stel de app in voor jezelf en je fiets. Vraagt je telefoon iets, reageer dan zoals je thuis zou doen. Bij de sticker en het vastklikken zeg je voor jezelf wat je in het echt zou doen.',
+      gegevens: 'Naam: wat je wilt<br>Telefoon: <code>06 12345678</code><br>Sms-code: <code>123456</code>',
+      klaar: 'Je ziet het beginscherm van de app, met je fiets bovenaan.',
+      vragen: [
+        LUKTE,
+        { id: 'vast', type: 'open', label: 'Waar twijfelde je, of liep je vast?' },
+        { id: 'waarschuwen', type: 'open', label: 'Hoe waarschuwt Ember je? Wanneer krijg je een melding, en wanneer gaat je telefoon af?' },
+        { id: 'contact', type: 'keuze', label: 'Je kon iemand vragen als contact. Wat deed je?', opties: ['Iemand toegevoegd', 'Later', 'Weet ik niet meer'] },
+      ] },
+    { id: 't3', soort: 'taak', nr: 3, label: 'Home', soortKleur: 'ok', titel: 'Lees het beginscherm', start: 'H1n',
+      situatie: 'Later die dag open je de app nog een keer.',
+      doen: 'Kijk rond. Je mag overal op tikken.',
+      klaar: 'Je kunt de vragen hieronder beantwoorden.',
+      vragen: [
+        { id: 'status', type: 'keuze', label: 'Hoe gaat het met je accu?', opties: ['Alles is normaal', 'Er is iets aan de hand', 'Weet ik niet'] },
+        { id: 'hoogste', type: 'kort', label: 'Hoe warm werd de accu vandaag op zijn warmst?' },
+        { id: 'vast', type: 'open', label: 'Zit Ember nog goed op de accu? Waar zag je dat?' },
+      ] },
+    { id: 't4', soort: 'taak', nr: 4, label: 'Aandacht', soortKleur: 'warn', titel: 'De accu wordt warmer', start: 'H0',
+      eerder: CONTACTEN,
+      situatie: 'Het is woensdagavond, 22:40. Je e-bike staat in de schuur aan de lader. Jij zit binnen op de bank. Je telefoon licht op.',
+      doen: 'Doe wat je in het echt zou doen.',
+      klaar: 'De app zegt dat alles weer normaal is. Dat duurt een paar seconden.',
+      vragen: [
+        LUKTE,
+        { id: 'doen', type: 'open', label: 'Wat zou je in het echt doen?' },
+        { id: 'ernst', type: 'schaal', label: 'Hoe ernstig vond je dit?', laag: 'Niet ernstig', hoog: 'Heel ernstig' },
+      ] },
+    { id: 't5', soort: 'taak', nr: 5, label: 'Oververhit', soortKleur: 'danger', titel: 'Oververhit, en je bent thuis', start: 'N00',
+      situatie: 'Een paar dagen later. Het is vrijdagavond, kwart over elf. Je bent thuis. Je e-bike staat in de schuur aan de lader. Je telefoon gaat af.',
+      daarna: 'Ga je kijken? Je loopt naar de schuur. Je ziet en ruikt niets bijzonders. De lader zit nog in het stopcontact.',
+      doen: 'Doe wat je in het echt zou doen. Doe je een minuut niets, dan gaat de app vanzelf verder. Dat hoort zo.',
+      klaar: 'De app vraagt: Wat zag je?',
+      vragen: [
+        LUKTE,
+        { id: 'wat', type: 'open', label: 'Wat deed je, en waarom?' },
+        { id: 'laden', type: 'keuze', label: 'Mag je de accu morgen weer laden?', opties: ['Ja', 'Nee', 'Weet ik niet'] },
+        { id: 'gevoel', type: 'keuze', label: 'Hoe voelde dit?', opties: ['Rustig', 'Gehaast', 'Iets anders'] },
+      ] },
+    { id: 't6', soort: 'taak', nr: 6, label: 'Oververhit', soortKleur: 'danger', titel: 'Oververhit, en je bent niet thuis', start: 'N00',
+      situatie: 'Een andere vrijdagavond, kwart over elf. Je bent op een verjaardag in een andere stad, anderhalf uur van huis. Er is niemand thuis. Je e-bike staat in de schuur aan de lader. Je telefoon gaat af.',
+      doen: 'Doe wat je in het echt zou doen. Sommige schermen gaan vanzelf door. Wacht dan even.',
+      klaar: 'Je bent weer op het beginscherm.',
+      vragen: [
+        LUKTE,
+        { id: 'wie', type: 'open', label: 'Wie weet er nu van het alarm, denk je? Wat staat er in hun bericht?' },
+        { id: 'contact', type: 'open', label: 'Hoe vind je het dat Sanne dit voor je doet?' },
+      ] },
+    { id: 't7', soort: 'taak', nr: 7, label: 'Brandgevaar', soortKleur: 'danger', titel: 'Brandgevaar', start: 'N00b',
+      situatie: 'Weer een andere avond, kwart over elf. Je bent thuis. Je e-bike staat in de schuur aan de lader. Je telefoon gaat af.',
+      daarna: 'Vraagt de app of het veilig is? De brandweer is klaar en zegt dat je weer naar binnen kunt.',
+      doen: 'Doe wat je in het echt zou doen. Bellen gaat in dit voorbeeld niet echt.',
+      klaar: 'Je bent weer op het beginscherm.',
+      vragen: [
+        LUKTE,
+        { id: 'eerst', type: 'open', label: 'Wat deed je als eerste, en waarom?' },
+        { id: 'accu', type: 'keuze', label: 'Wat doe je nu met de accu?', opties: ['Gewoon weer laden', 'Laten controleren', 'Weet ik niet'] },
+      ] },
+    { id: 't8', soort: 'taak', nr: 8, label: 'Contact', titel: 'Jij bent het contact', start: 'N12a',
+      situatie: 'Nu draaien we het om. Mats woont bij jou in de straat en heeft Ember. Jij bent een van zijn contacten. Het is kwart over elf \'s avonds en je bent thuis. Je krijgt deze sms.',
+      daarna: 'Ga je kijken? Je staat bij de schuur van Mats. Je ziet en ruikt niets bijzonders.',
+      doen: 'Doe wat je in het echt zou doen.',
+      klaar: 'De app zegt dat je kunt gaan.',
+      vragen: [
+        LUKTE,
+        { id: 'link', type: 'keuze', label: 'Zou je op de link in deze sms tikken?', opties: ['Ja', 'Nee', 'Weet ik niet'] },
+        { id: 'buur', type: 'open', label: 'Zou je dit voor een buur of vriend doen? Wat zou je tegenhouden?' },
+      ] },
+    { id: 'stellingen', soort: 'stellingen', naam: 'Stellingen', vragen: [
+      ['gemak', 'Het instellen van Ember was makkelijk.'],
+      ['stappen', 'Ik wist bij elke stap wat ik moest doen.'],
+      ['statussen', 'Het verschil tussen Normaal, Aandacht, Oververhit en Brandgevaar was me duidelijk.'],
+      ['alarm', 'Bij een alarm wist ik wat ik moest doen.'],
+      ['veilig', 'Met Ember zou ik me veiliger voelen als mijn accu laadt.'],
+      ['optijd', 'Ik vertrouw erop dat Ember op tijd waarschuwt.'],
+      ['onnodig', 'Ik verwacht dat Ember me niet onnodig waarschuwt.'],
+      ['sms', 'Ik vind het goed dat mijn contacten een sms krijgen als ik niet reageer.'],
+      ['gehaast', 'De schermen bij een alarm gaven me een gehaast gevoel.'],
+    ].map(([id, label]) => ({ id, type: 'schaal', label, laag: 'Helemaal oneens', hoog: 'Helemaal eens' })) },
+    { id: 'slot', soort: 'slot', naam: 'Tot slot', vragen: [
+      { id: 'indruk', type: 'open', label: 'Wat is je indruk van de app, in een paar woorden?' },
+      { id: 'uitleg', type: 'open', label: 'Hoe zou je Ember in één zin uitleggen aan een buurman?' },
+      { id: 'mis', type: 'open', label: 'Wat miste je, of wat had je anders verwacht?' },
+      { id: 'kopen', type: 'keuze', label: 'Na een gratis maand kost Ember Live € 3,99 per maand. Zou je dat betalen?', opties: ['Ja', 'Misschien', 'Nee'] },
+      { id: 'waarom', type: 'open', label: 'Waarom?' },
+    ] },
+    { id: 'klaar', soort: 'klaar', naam: 'Klaar', vragen: [] },
+  ];
+  const TAKEN = STAPPEN.filter(s => s.soort === 'taak');
+  const sleutel = (s, v) => s.id + '.' + v.id;
+
+  // ---- bewaren in deze browser: zo ben je niets kwijt als je de pagina sluit ----
+  const OPSLAG = 'ember-gebruikerstest-v1';
+  const nieuwId = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+  let S = { A: {}, i: 0, sid: nieuwId(), start: new Date().toISOString() };
+  try { const o = JSON.parse(localStorage.getItem(OPSLAG) || 'null'); if (o && o.A && o.sid) S = o; } catch (e) {}
+  const bewaar = () => { try { localStorage.setItem(OPSLAG, JSON.stringify(S)); } catch (e) {} };
+
+  // ---- opslaan voor de testleider, als deze kijker dat mag (db). Anders: kopiëren en sturen ----
+  let db = null, uid = null, magSchrijven = false, ouderGezet = false, rij = Promise.resolve(), laatst = '';
+  const meld = t => { const el = document.getElementById('opslag'); if (el) el.textContent = t; };
+  function opslaan() {
+    if (!magSchrijven) return;
+    const data = { A: S.A, stap: S.i, klaar: STAPPEN[S.i].soort === 'klaar', start: S.start };
+    const vorm = JSON.stringify(data); if (vorm === laatst) return; laatst = vorm;
+    rij = rij.then(async () => {
+      try {
+        if (!ouderGezet) { await db.doc('antwoorden/' + uid).set({ bijgewerkt: new Date().toISOString() }); ouderGezet = true; }
+        await db.doc('antwoorden/' + uid + '/sessies/' + S.sid).set({ ...data, bijgewerkt: new Date().toISOString() });
+        meld('Antwoorden opgeslagen');
+      } catch (e) { meld('Niet opgeslagen. Kopieer je antwoorden aan het eind.'); }
+    });
+  }
+  (async () => {
+    if (!window.claude || !window.claude.use) return;
+    try {
+      const [u, d] = await Promise.all([window.claude.use('user'), window.claude.use('db')]);
+      if (!u || !d) return;
+      db = d; uid = await u.id();
+      magSchrijven = !!uid && (await u.can('data.write')) !== false;
+      if (await u.canEdit()) { document.getElementById('naar-res').hidden = false; if (location.hash === '#resultaten') toonResultaten(); }
+      if (magSchrijven) opslaan();
+    } catch (e) {}
+  })();
+
+  // ---- de app ----
+  const grid = document.getElementById('grid'), app = document.getElementById('app'), frame = document.getElementById('frame');
+  const breed = matchMedia('(min-width: 960px)');
+  let geladen = null, teller = 0;
+  function laadApp(stap) { frame.src = 'app/ember.html?r=' + (++teller) + '#' + stap.start; geladen = stap.id; document.getElementById('app-los').href = 'app/ember.html#' + stap.start; }
+  function openApp() { const s = STAPPEN[S.i]; if (geladen !== s.id) laadApp(s); app.classList.add('open'); document.body.style.overflow = 'hidden'; }
+  function sluitApp() { app.classList.remove('open'); document.body.style.overflow = ''; }
+  document.getElementById('app-opnieuw').onclick = () => laadApp(STAPPEN[S.i]);
+  document.getElementById('app-klaar').onclick = () => { sluitApp(); const v = document.querySelector('.vragen'); if (v) v.scrollIntoView({ block: 'start' }); };
+
+  // ---- velden ----
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  function veld(s, v) {
+    const k = sleutel(s, v), id = 'v-' + k.replace('.', '-'), w = S.A[k];
+    if (v.type === 'open' || v.type === 'kort') {
+      const inp = v.type === 'open' ? `<textarea id="${id}" data-k="${k}" rows="3">${esc(w || '')}</textarea>` : `<input type="text" id="${id}" data-k="${k}" value="${esc(w || '')}" autocomplete="off">`;
+      return `<div class="vraag"><label for="${id}">${esc(v.label)}</label>${v.hint ? `<p class="hint">${esc(v.hint)}</p>` : ''}${inp}</div>`;
+    }
+    const opties = v.type === 'schaal' ? ['1', '2', '3', '4', '5'] : v.opties;
+    const knoppen = opties.map((o, n) => `<label class="optie"><input type="radio" id="${id}-${n}" name="${id}" data-k="${k}" value="${esc(o)}"${w === o ? ' checked' : ''}><span>${esc(o)}</span></label>`).join('');
+    const ends = v.type === 'schaal' ? `<div class="ends"><span>${esc(v.laag)}</span><span>${esc(v.hoog)}</span></div>` : '';
+    return `<fieldset class="vraag ${v.type}"><legend>${esc(v.label)}</legend><div class="opties">${knoppen}</div>${ends}</fieldset>`;
+  }
+
+  // ---- de stappen ----
+  const inhoud = document.getElementById('inhoud');
+  function prog() {
+    document.getElementById('prog').innerHTML = STAPPEN.map((s, n) => `<i class="${n <= S.i ? 'on' : ''}"></i>`).join('');
+    const s = STAPPEN[S.i];
+    document.getElementById('stapnaam').textContent = s.soort === 'taak' ? `Taak ${s.nr} van ${TAKEN.length}` : s.naam;
+  }
+  function nav(volgendeTekst) {
+    const terug = S.i > 0 ? '<button type="button" class="tekstknop" id="terug">Vorige</button>' : '<span></span>';
+    return `<nav class="stapnav">${terug}<button type="button" class="pill" id="verder">${volgendeTekst}</button></nav><p class="opslag" id="opslag"></p>`;
+  }
+  function render() {
+    const s = STAPPEN[S.i]; prog(); sluitApp();
+    const metApp = s.soort === 'taak';
+    grid.classList.toggle('met-app', metApp);
+    app.hidden = !metApp;
+    if (metApp) { document.getElementById('app-wat').textContent = `Taak ${s.nr} · ${s.titel}`; if (breed.matches && geladen !== s.id) laadApp(s); }
+    let h = '';
+    if (s.soort === 'intro') {
+      h = `<div class="kop"><h1>Help ons de Ember-app te verbeteren</h1>
+        <p class="lead">Ember is een klein apparaat op de accu van je e-bike. Het meet dag en nacht de temperatuur en waarschuwt je via een app als er iets mis is. Die app is nog niet af. Jij test een voorbeeld.</p></div>
+        <div class="situatie" style="font-size:16px">
+          <p>Het duurt ongeveer 25 minuten: 8 korte taken, met na elke taak een paar vragen.</p>
+          <p>We testen de app, niet jou. Je kunt niets fout doen. Twijfel je of loop je vast, dan is dat precies wat we willen weten. Schrijf het gewoon op.</p>
+          <p>Een paar taken gaan over een warme accu en over brandgevaar. Die situaties zijn verzonnen. Niet alles in de app werkt, en er gaat niets echt de deur uit.</p>
+          <p class="daarna">Op een telefoon open je de app met een knop bij elke taak. Op een computer staat hij naast de vragen.</p>
+        </div>
+        <section class="vragen" style="border-top:0;padding-top:0"><h2>Eerst iets over jou</h2>${s.vragen.map(v => veld(s, v)).join('')}</section>
+        ${nav('Begin met taak 1')}`;
+    } else if (s.soort === 'taak') {
+      const laatste = s.nr === TAKEN.length;
+      h = `<div class="kop"><p class="eyebrow"><span class="soort ${s.soortKleur || ''}">${esc(s.label)}</span><span>Taak ${s.nr} van ${TAKEN.length}</span></p><h1>${esc(s.titel)}</h1></div>
+        <blockquote class="situatie">${s.eerder ? `<span class="eerder">${esc(s.eerder)}</span>` : ''}<span>${esc(s.situatie)}</span>${s.daarna ? `<span class="daarna">${esc(s.daarna)}</span>` : ''}</blockquote>
+        <dl class="doen">
+          <div><dt>Wat je doet</dt><dd>${esc(s.doen)}</dd></div>
+          ${s.gegevens ? `<div><dt>Gebruik</dt><dd>${s.gegevens}</dd></div>` : ''}
+          <div><dt>Klaar als</dt><dd>${esc(s.klaar)}</dd></div>
+        </dl>
+        <button type="button" class="pill groot open-app" id="open-app">Open de app</button>
+        <section class="vragen"><h2>Vragen bij deze taak</h2>${s.vragen.map(v => veld(s, v)).join('')}</section>
+        ${nav(laatste ? 'Naar de laatste vragen' : 'Volgende taak')}`;
+    } else if (s.soort === 'stellingen') {
+      h = `<div class="kop"><h1>Hoe eens ben je het hiermee?</h1><p class="lead">Kies bij elke zin een cijfer. 1 is helemaal oneens, 5 is helemaal eens.</p></div>
+        <section class="vragen" style="border-top:0;padding-top:0">${s.vragen.map(v => veld(s, v)).join('')}</section>${nav('Verder')}`;
+    } else if (s.soort === 'slot') {
+      h = `<div class="kop"><h1>Tot slot</h1><p class="lead">Nog een paar vragen over de app als geheel.</p></div>
+        <section class="vragen" style="border-top:0;padding-top:0">${s.vragen.map(v => veld(s, v)).join('')}</section>${nav('Afronden')}`;
+    } else {
+      h = `<div class="kop"><h1>Dank je wel</h1><p class="lead">Je bent klaar. Kopieer je antwoorden en stuur ze in een bericht aan degene die je deze link gaf.</p></div>
+        <div class="rij"><button type="button" class="pill" id="kopieer">Kopieer je antwoorden</button><span class="opslag" id="kopie-status" role="status"></span></div>
+        <pre class="samenvatting" id="samenvatting" tabindex="0">${esc(samenvatting())}</pre>
+        <p class="opslag" id="opslag"></p>
+        <div class="rij"><button type="button" class="tekstknop" id="terug">Terug naar de vragen</button><button type="button" class="tekstknop" id="nieuw">Nieuwe deelnemer op dit toestel</button></div>`;
+    }
+    inhoud.innerHTML = h;
+    window.scrollTo(0, 0);
+    inhoud.querySelectorAll('[data-k]').forEach(el => el.addEventListener(el.type === 'radio' ? 'change' : 'input', () => { S.A[el.dataset.k] = el.value; bewaar(); }));
+    const q = id => document.getElementById(id);
+    if (q('open-app')) q('open-app').onclick = openApp;
+    if (q('terug')) q('terug').onclick = () => { S.i = Math.max(0, S.i - 1); bewaar(); opslaan(); render(); };
+    if (q('verder')) q('verder').onclick = () => { S.i = Math.min(STAPPEN.length - 1, S.i + 1); bewaar(); opslaan(); render(); };
+    if (q('kopieer')) q('kopieer').onclick = () => {
+      const t = samenvatting(), st = q('kopie-status');
+      const kies = () => { const r = document.createRange(); r.selectNodeContents(q('samenvatting')); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); st.textContent = 'De tekst is geselecteerd. Kopieer hem met je toestel.'; };
+      try { navigator.clipboard.writeText(t).then(() => { st.textContent = 'Gekopieerd. Plak het in een bericht.'; }, kies); } catch (e) { kies(); }
+    };
+    if (q('nieuw')) q('nieuw').onclick = () => { S = { A: {}, i: 0, sid: nieuwId(), start: new Date().toISOString() }; laatst = ''; geladen = null; bewaar(); render(); };
+    if (STAPPEN[S.i].soort === 'klaar') opslaan();
+  }
+  breed.addEventListener('change', render);
+
+  // ---- de samenvatting om te sturen ----
+  function samenvatting(A = S.A) {
+    const regels = ['Ember gebruikerstest' + (A['welkom.naam'] ? ' · ' + A['welkom.naam'] : ''), ''];
+    for (const s of STAPPEN) {
+      const ant = s.vragen.filter(v => !(s.id === 'welkom' && v.id === 'naam')).map(v => [v.label, String(A[sleutel(s, v)] || '').trim()]).filter(x => x[1]);
+      if (!ant.length) continue;
+      regels.push(s.soort === 'taak' ? `Taak ${s.nr} · ${s.titel}` : s.naam, ...ant.map(([l, w]) => `- ${l} ${w}`), '');
+    }
+    return regels.join('\n').trim();
+  }
+
+  // ---- resultaten: alleen voor de eigenaar en bewerkers ----
+  async function toonResultaten() {
+    grid.classList.remove('met-app'); app.hidden = true; sluitApp();
+    document.getElementById('stapnaam').textContent = 'Resultaten';
+    document.getElementById('prog').innerHTML = '';
+    inhoud.innerHTML = `<div class="kop"><h1>Resultaten</h1><p class="lead">Antwoorden die op dit Artifact zijn opgeslagen. Testers zonder account kopiëren hun antwoorden en sturen ze zelf.</p></div><p class="opslag" id="laad">Laden…</p>`;
+    inhoud.style.maxWidth = '900px';
+    const klok = setTimeout(() => { const l = document.getElementById('laad'); if (l) l.textContent = 'Het laden duurt lang. Probeer het later nog eens.'; }, 10000);
+    let sessies = [];
+    try {
+      const ouders = await db.collection('antwoorden').get();
+      for (const o of ouders.docs) { const ss = await db.collection('antwoorden/' + o.id + '/sessies').get(); ss.docs.forEach(d => sessies.push(d.data())); }
+    } catch (e) { clearTimeout(klok); document.getElementById('laad').textContent = 'De antwoorden konden niet worden geladen.'; return; }
+    clearTimeout(klok);
+    sessies = sessies.filter(x => x && x.A && Object.keys(x.A).length).sort((a, b) => String(a.start).localeCompare(String(b.start)));
+    const n = sessies.length;
+    let h = `<div class="kop"><h1>Resultaten</h1><p class="lead">${n} ${n === 1 ? 'deelnemer' : 'deelnemers'} opgeslagen, ${sessies.filter(x => x.klaar).length} helemaal klaar. Testers zonder account kopiëren hun antwoorden en sturen ze zelf; die staan hier niet.</p></div>`;
+    if (!n) { inhoud.innerHTML = h + '<div class="res"><p class="leeg">Nog geen antwoorden. Vul de test zelf in met een deelnemer naast je, dan verschijnen ze hier.</p></div>'; return; }
+    const tel = (k, opties) => opties.map(o => sessies.filter(x => x.A[k] === o).length);
+    h += '<div class="res"><section><h2>Lukte de taak?</h2><div class="legenda" style="margin:10px 0 12px"><span class="a">Ja, makkelijk</span><span class="b">Ja, met moeite</span><span class="c">Nee</span></div><div class="tabelwrap"><table><thead><tr><th>Taak</th><th>Antwoorden</th><th style="width:45%">Verdeling</th></tr></thead><tbody>';
+    for (const t of TAKEN) {
+      if (!t.vragen.includes(LUKTE)) continue;
+      const [a, b, c] = tel(t.id + '.lukte', LUKTE.opties), tot = a + b + c;
+      const pct = x => tot ? (100 * x / tot).toFixed(1) : 0;
+      h += `<tr><td>${t.nr} · ${esc(t.titel)}</td><td>${a} · ${b} · ${c}</td><td><div class="balk"><i class="a" style="width:${pct(a)}%"></i><i class="b" style="width:${pct(b)}%"></i><i class="c" style="width:${pct(c)}%"></i></div></td></tr>`;
+    }
+    h += '</tbody></table></div></section><section><h2>Stellingen</h2><p class="opslag" style="margin:6px 0 12px">Gemiddelde van 1 tot 5. Bij de laatste stelling is laag goed.</p><div class="tabelwrap"><table><thead><tr><th>Stelling</th><th>Gem.</th><th>n</th></tr></thead><tbody>';
+    const st = STAPPEN.find(s => s.id === 'stellingen');
+    for (const v of st.vragen) {
+      const w = sessies.map(x => +x.A['stellingen.' + v.id]).filter(x => x >= 1);
+      h += `<tr><td>${esc(v.label)}</td><td>${w.length ? (w.reduce((p, x) => p + x, 0) / w.length).toFixed(1) : '·'}</td><td>${w.length}</td></tr>`;
+    }
+    h += '</tbody></table></div></section><section class="open-antw"><h2>Open antwoorden en keuzes</h2>';
+    for (const s of STAPPEN) for (const v of s.vragen) {
+      if (v.type === 'schaal' || v === LUKTE) continue;
+      const k = sleutel(s, v), w = sessies.map(x => [x.A['welkom.naam'] || 'Anoniem', x.A[k]]).filter(x => x[1] && String(x[1]).trim());
+      if (!w.length) continue;
+      h += `<div><h3>${s.soort === 'taak' ? 'Taak ' + s.nr + ' · ' : ''}${esc(v.label)}</h3><ul>${w.map(([wie, a]) => `<li><b>${esc(wie)}:</b> ${esc(a)}</li>`).join('')}</ul></div>`;
+    }
+    h += '</section></div>';
+    inhoud.innerHTML = h;
+  }
+  addEventListener('hashchange', () => { if (location.hash === '#resultaten' && !document.getElementById('naar-res').hidden) toonResultaten(); else { inhoud.style.maxWidth = ''; render(); } });
+
+  render();
+})();
+</script>
+
+</body>
+</html>

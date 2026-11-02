@@ -1,0 +1,386 @@
+/* Ember app V14 · gedeelde stijl voor het canvas. Rood en oranje alleen als accent: stip, statuswoord, laatste staaf en de knop Contact 112. Zelfde tokens als het prototype (ember-app/v12).
+   Maten: padding en gap alleen 4 8 12 16 20 24. Tekst alleen 12 16 20 24 32. */
+:root {
+  --bg-top: #1c1d20; --bg-mid: #2a2c30; --bg-bottom: #3b3d42;
+  --text: #f5f5f7; --text-2: #c2c5cb; --text-3: #a5a8b0; --on-btn: #23252b; --arrow: #17171c;
+  --surface: rgba(255,255,255,.06); --surface-2: rgba(255,255,255,.08); --key: rgba(255,255,255,.20);
+  --line: rgba(255,255,255,.12); --line-2: rgba(255,255,255,.18); --select: rgba(255,255,255,.30);
+  --ok: #82b98e; --ok-t: #96c5a0; --warn: #e8a23a; --warn-t: #f0b65a; --danger: #c8443a; --danger-t: #f2958b; --idle: #5e646c; --idle-t: #8e959d;
+  --font: "Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* V21 · de spacing-basis, gelijk aan de Figma-variabelen Ember / Spacing (space/0 tot space/32). Elke padding, gap en marge
+     in de schermen gebruikt een van deze. Rollen (Figma Foundations, aangevuld met V12):
+       4  label naar waarde, tekst in een kaart
+       8  titel naar tekst, kaart naar kaart (Home en alarm), onderdelen van een veld, grafiek naar tijdlabels
+      12  tussen knoppen, icoon naar tekst in een rij
+      16  kop boven en onder, bovenrand van de inhoud, rij boven en onder, kaart naar statusregel
+      20  binnenkant van een kaart, een tegel en een rij (links en rechts)
+      24  schermmarge links en rechts, tussen blokken in de inhoud, onderkant van het scherm
+      32  ruimte na de zwerm in een alarm
+     Geen eigen tussenwaarden. Wat geen spacing is maar uitlijning (aslabel 36, tikvlak 44, haarlijn 2) staat los benoemd. */
+  --space-0: 0px; --space-4: 4px; --space-8: 8px; --space-12: 12px; --space-16: 16px; --space-20: 20px; --space-24: 24px; --space-32: 32px;
+  --seam: 2px;   /* de naad tussen rijen of kaarten die samen één groep vormen (V12: Lijstgroep, Keuzes) */
+}
+.scr { position: relative; width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; background: linear-gradient(180deg, #1c1d20 0px, #2a2c30 422px, #3b3d42 844px); color: var(--text); font-family: var(--font); -webkit-font-smoothing: antialiased; }
+.scr.tall { height: auto; min-height: 844px; background: linear-gradient(180deg, #1c1d20 0%, #2a2c30 50%, #3b3d42 100%); }
+.scr * { box-sizing: border-box; }
+:where(.scr) a { color: inherit; text-decoration: none; }
+
+.t32 { font-size: 32px; line-height: 40px; letter-spacing: -0.01em; font-weight: 400; margin: 0; text-wrap: balance; }
+.t24 { font-size: 24px; line-height: 32px; font-weight: 400; margin: 0; }
+.t20 { font-size: 20px; line-height: 28px; font-weight: 400; margin: 0; }
+.t16 { font-size: 16px; line-height: 24px; margin: 0; }
+.t12 { font-size: 12px; line-height: 16px; margin: 0; }
+.m { font-weight: 500; }
+.c2 { color: var(--text-2); } .c3 { color: var(--text-3); }
+.ok { color: var(--ok-t); } .warn { color: var(--warn-t); } .danger { color: var(--danger-t); } .idle { color: var(--idle-t); }
+
+/* opbouw */
+.body { flex: 1 0 auto; padding: var(--space-16) var(--space-24) var(--space-24); display: flex; flex-direction: column; gap: var(--space-24); }
+.body.tight { gap: var(--block-gap, var(--space-24)); }   /* V21: ook hier 24 tussen blokken, zoals op elk ander scherm (was 16 op Klik Ember vast) */
+.foot { padding: var(--space-16) var(--space-24) var(--space-24); display: flex; flex-direction: column; gap: var(--space-12); }
+.foot.row { flex-direction: row; align-items: center; justify-content: space-between; }
+.tb { display: flex; flex-direction: column; gap: var(--space-8); }
+
+/* kop met voortgang */
+.kop { display: flex; align-items: center; justify-content: space-between; gap: var(--space-12); min-height: 56px; padding: var(--space-16) var(--space-24); }
+.ib { width: 44px; height: 44px; margin: -10px; display: grid; place-items: center; border-radius: 22px; color: var(--text); }
+.ib.nb { visibility: hidden; }
+.prog { display: flex; gap: var(--space-12); align-items: center; }
+.seg { width: 12px; height: 4px; border-radius: 2px; background: var(--key); overflow: hidden; display: block; }
+.seg.cur { width: 40px; }
+.seg i { display: block; height: 100%; background: var(--text); border-radius: 2px; }
+.steps { min-width: 24px; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* knoppen */
+.round { width: 56px; height: 56px; border-radius: 32px; background: var(--text); color: var(--arrow); display: grid; place-items: center; flex: none; margin-left: auto; }
+.pill { height: 56px; border-radius: 32px; background: var(--text); color: var(--on-btn); font-size: 16px; font-weight: 500; width: 100%; display: grid; place-items: center; }
+.pill.red { background: var(--danger); color: var(--text); }
+.txtbtn { min-height: 44px; font-size: 16px; font-weight: 500; color: var(--text); padding: var(--space-8) var(--space-12); align-self: center; display: grid; place-items: center; }
+.foot.row .txtbtn { padding-left: 0; color: var(--text-2); }
+.lnk { font-size: 12px; line-height: 16px; color: var(--text-2); text-decoration: underline; text-underline-offset: 3px; align-self: flex-start; padding: var(--space-4) 0; }
+
+/* velden */
+.field { display: flex; flex-direction: column; gap: var(--space-4); padding-bottom: var(--space-8); border-bottom: 1px solid var(--line-2); }
+.field.on { border-bottom-color: var(--text); }
+.field input { background: none; border: 0; outline: 0; font: inherit; font-size: 20px; line-height: 28px; padding: 0; width: 100%; color: var(--text); }
+.field input::placeholder { color: rgba(255,255,255,.28); }
+.otp { display: flex; gap: var(--space-8); }
+.otp span { flex: 1; height: 56px; border-bottom: 1px solid var(--line-2); display: grid; place-items: center; font-size: 24px; }
+.otp span.cur { border-bottom-color: var(--text); }
+.chips { display: flex; gap: var(--space-8); flex-wrap: wrap; }
+.chip { padding: var(--space-8) var(--space-16); border-radius: 24px; background: var(--surface-2); font-size: 16px; line-height: 24px; }
+.chip.on { background: var(--select); }
+
+/* lijsten */
+.group { display: flex; flex-direction: column; gap: var(--seam); }
+.group > .row { background: var(--surface); padding: var(--space-20); display: flex; gap: var(--space-12); align-items: center; width: 100%; }
+.group > .row:first-child { border-radius: 24px 24px 0 0; }
+.group > .row:last-child { border-radius: 0 0 24px 24px; }
+.group > .row:only-child { border-radius: 24px; }
+.grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--space-4); }
+.radio { width: 22px; height: 22px; border-radius: 11px; border: 1.5px solid var(--select); display: grid; place-items: center; flex: none; }
+.row.on .radio { border-color: var(--text); }
+.row.on .radio::after { content: ""; width: 10px; height: 10px; border-radius: 5px; background: var(--text); }
+.dlist { display: flex; flex-direction: column; }
+.drow { display: flex; gap: var(--space-12); align-items: center; padding: var(--space-16) 0; border-bottom: 1px solid var(--line); width: 100%; }
+.dlist > .drow:first-child { border-top: 1px solid var(--line); }
+.num { width: 16px; color: var(--text-2); flex: none; }
+.chev { color: var(--text-3); display: grid; flex: none; }
+.sect { display: flex; flex-direction: column; gap: var(--space-12); }
+.dot { width: 10px; height: 10px; border-radius: 5px; flex: none; display: inline-block; }
+.switch { width: 48px; height: 28px; border-radius: 14px; background: var(--ok); position: relative; flex: none; }
+.switch::after { content: ""; position: absolute; top: 2px; left: 22px; width: 24px; height: 24px; border-radius: 12px; background: #fff; }
+.switch.off { background: var(--key); } .switch.off::after { left: 2px; }
+.spin { width: 16px; height: 16px; border-radius: 8px; border: 2px solid var(--line-2); border-top-color: var(--text); flex: none; }
+
+/* kaarten en tegels */
+.card { background: var(--surface); border-radius: 24px; padding: var(--space-20); display: flex; flex-direction: column; gap: var(--space-16); }
+.card .txt { display: flex; flex-direction: column; gap: var(--space-8); }
+.tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-8); }
+.tile { background: var(--surface); border-radius: 24px; padding: var(--space-20); min-height: 152px; display: flex; flex-direction: column; gap: var(--space-4); }
+.tile.low { min-height: 120px; }
+.tile .ico { margin-top: auto; padding-top: var(--space-12); display: block; }
+.gcards { display: flex; flex-direction: column; gap: var(--seam); }
+.gcards > .card { border-radius: 0; }
+.gcards > .card:first-child { border-radius: 24px 24px 0 0; }
+.gcards > .card:last-child { border-radius: 0 0 24px 24px; }
+.gcards > .card:only-child { border-radius: 24px; }
+
+/* beeld */
+.held { position: relative; height: 240px; flex: none; width: 100%; }
+.held.big { height: 280px; }
+.held.fill { flex: 1 1 auto; min-height: 220px; }
+.emb { position: relative; height: 240px; flex: none; width: 100%; display: grid; place-items: center; }
+.emb img { width: 342px; height: 240px; display: block; }
+.clip { position: relative; height: 260px; flex: none; border-radius: 24px; overflow: hidden; background: #f5f5f7; }
+.clip img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.clip .cnt { position: absolute; right: 20px; top: 16px; color: var(--on-btn); font-variant-numeric: tabular-nums; }
+.cap { display: flex; justify-content: space-between; margin-top: -16px; }
+.illus { display: grid; place-items: center; padding: var(--space-16) 0; color: var(--text-2); }
+.vf { position: relative; border-radius: 24px; overflow: hidden; background: radial-gradient(120% 90% at 50% 40%, #3a3c41 0%, #18191c 70%); aspect-ratio: 1 / 1; display: grid; place-items: center; }
+.vf .fr { width: 62%; aspect-ratio: 1 / 1; position: relative; }
+.vf .fr b { position: absolute; width: 28px; height: 28px; border: 0 solid var(--text); }
+.vf .fr b:nth-child(1) { top: 0; left: 0; border-top-width: 3px; border-left-width: 3px; border-top-left-radius: 12px; }
+.vf .fr b:nth-child(2) { top: 0; right: 0; border-top-width: 3px; border-right-width: 3px; border-top-right-radius: 12px; }
+.vf .fr b:nth-child(3) { bottom: 0; left: 0; border-bottom-width: 3px; border-left-width: 3px; border-bottom-left-radius: 12px; }
+.vf .fr b:nth-child(4) { bottom: 0; right: 0; border-bottom-width: 3px; border-right-width: 3px; border-bottom-right-radius: 12px; }
+.vf .scan { position: absolute; left: 8%; right: 8%; top: 46%; height: 2px; background: var(--ok); }
+.vf .hint { position: absolute; bottom: 16px; left: 0; right: 0; text-align: center; }
+
+/* home */
+.hkop { padding: var(--space-16) var(--space-24) var(--space-8); display: flex; flex-direction: column; gap: var(--space-16); }
+.hkop .r { display: flex; justify-content: space-between; align-items: center; gap: var(--space-12); }
+.hkop .vs { display: flex; gap: var(--space-12); }
+.circ { width: 48px; height: 48px; border-radius: 24px; background: var(--surface); display: grid; place-items: center; position: relative; flex: none; color: var(--text); }
+.circ.white { background: var(--text); color: #000; }
+.circ .badge { position: absolute; top: 1px; right: 1px; width: 12px; height: 12px; border-radius: 6px; border: 2px solid var(--bg-top); box-sizing: border-box; }   /* het midden van de stip op de rand van de cirkel, op 45 graden */
+.hbody { padding: var(--space-8) var(--space-24) var(--space-24); display: flex; flex-direction: column; gap: var(--space-8); }
+.hbody .card { margin-top: 0; }
+.hbody > .held + * { margin-top: var(--space-16); }
+
+/* lockscreen, sms, web */
+.lock { background: radial-gradient(140% 80% at 50% 0%, #34363c 0%, #16171a 70%); }
+.lockbody { flex: 1; display: flex; flex-direction: column; align-items: center; padding: var(--space-24) var(--space-12); gap: var(--space-4); }
+.clock { font-size: 80px; line-height: 88px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; } /* iOS-systeemklok, buiten de app-schaal */
+.spacer { flex: 1; }
+.notif { width: 100%; background: rgba(62,64,70,.86); -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px); box-shadow: 0 16px 40px -12px rgba(0,0,0,.7); border-radius: 24px; padding: var(--space-12) var(--space-16) var(--space-16); display: flex; gap: var(--space-12); text-align: left; }
+.notif .grow { gap: var(--space-4); }
+.lockfoot { display: flex; justify-content: space-between; padding: var(--space-16) var(--space-24) var(--space-24); }
+.lockfoot span { width: 48px; height: 48px; border-radius: 24px; background: rgba(255,255,255,.16); display: block; }
+.mini { width: 40px; height: 40px; border-radius: 10px; background: #1c1d20; flex: none; position: relative; overflow: hidden; }
+.mini i { position: absolute; border-radius: 50%; display: block; }
+.sms { background: #000; }
+.smshead { display: flex; flex-direction: column; align-items: center; gap: var(--space-4); padding: var(--space-16) var(--space-24) var(--space-12); border-bottom: 1px solid var(--line); }
+.av { width: 48px; height: 48px; border-radius: 24px; background: #5e646c; display: grid; place-items: center; }
+.bubble { align-self: flex-start; max-width: 80%; background: #26272b; border-radius: 20px; padding: var(--space-12) var(--space-16); }
+.bubble u { color: #6ea8ff; text-underline-offset: 3px; }
+
+/* systeemvenster */
+.dim { position: absolute; inset: 0; background: rgba(0,0,0,.45); display: grid; place-items: center; }
+.alert { width: 272px; border-radius: 16px; background: rgba(48,49,54,.98); text-align: center; overflow: hidden; }
+.alert .bd { padding: var(--space-20) var(--space-16) var(--space-16); display: flex; flex-direction: column; gap: var(--space-4); }
+.alert .bt { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--line); }
+.alert .bt a { padding: var(--space-12); font-size: 16px; color: #6ea8ff; display: block; }
+.alert .bt a + a { border-left: 1px solid var(--line); font-weight: 500; }
+
+/* voertuigen */
+.vgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-8); }
+.vcard { background: var(--surface); border-radius: 24px; padding: var(--space-16); display: flex; flex-direction: column; align-items: center; gap: var(--space-8); text-align: center; border: 1px solid transparent; }
+.vcard.on { border-color: var(--select); }
+
+/* zwerm (component Zwerm.dc.html) */
+.zw { position: relative; width: 100%; height: 100%; }
+.zw-ring { position: absolute; inset: 0; animation: zwspin 140s linear infinite; }
+.zw-ring i { position: absolute; display: block; border-radius: 50%; animation: zwtw 3.4s ease-in-out infinite; }
+.zw-lab { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-4); text-align: center; }
+@keyframes zwspin { to { transform: rotate(360deg); } }
+@keyframes zwtw { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .zw-ring, .zw-ring i { animation: none; } }
+
+/* grafiek (component Grafiek.dc.html) */
+.chart { display: flex; flex-direction: column; gap: var(--space-16); }
+.chart .head { display: flex; justify-content: space-between; align-items: center; }
+.tabs { display: flex; gap: var(--space-4); }
+.tab { font-size: 12px; line-height: 16px; padding: var(--space-4) var(--space-8); border-radius: 14px; color: var(--text-2); }
+.tab.on { background: #e6e7ea; color: var(--on-btn); }
+.arrs { display: flex; gap: var(--space-8); }
+.arrs span { width: 36px; height: 36px; border-radius: 18px; background: var(--surface); display: grid; place-items: center; }
+.bars { position: relative; height: 140px; display: flex; align-items: flex-end; gap: var(--space-4); padding-right: 36px; }
+.bars i { flex: 1; border-radius: 3px; display: block; }
+.bars .gl { position: absolute; left: 0; right: 36px; height: 1px; background: rgba(255,255,255,.08); }
+.bars .yl { position: absolute; right: 0; transform: translateY(50%); }
+.xl { display: flex; justify-content: space-between; padding-right: 36px; margin-top: var(--space-8); }
+
+/* ---------------------------------------------------------------- V13 · patronen uit V12 */
+/* statuskaart V12: temperatuur links, de toestand ernaast op één regel; knop alleen bij Aandacht en alarm */
+.skaart { background: var(--surface); border-radius: 24px; padding: var(--space-20); display: flex; flex-direction: column; gap: var(--space-16); }
+/* V21 · statuskaart: bovenaan de status en de temperatuur op één regel, de uitleg daaronder over de volle breedte van de kaart */
+.skaart .regel { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--space-16); row-gap: var(--space-8); align-items: baseline; }
+.skaart .stxt { display: contents; }
+.skaart .stxt > .wat { grid-column: 1; grid-row: 1; }
+.skaart .stxt > :not(.wat) { grid-column: 1 / -1; }
+.skaart .tcol { grid-column: 2; grid-row: 1; display: flex; flex-direction: column; align-items: flex-end; }
+.skaart .temp { font-size: 32px; line-height: 40px; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+.skaart .wat { font-size: 20px; line-height: 28px; }
+/* melding bovenaan Home */
+.banner { display: flex; gap: var(--space-12); align-items: center; padding: var(--space-12) var(--space-20); border-radius: 24px; background: var(--surface-2); color: var(--text); font-size: 16px; line-height: 24px; }
+.banner.warn, .banner.red { background: var(--surface-2); }
+.banner .grow { text-wrap: pretty; }
+.banner .txtbtn { min-height: 44px; padding: 0 0 0 var(--space-12); flex: none; }
+
+/* lockscreen-melding: app-icoon met een rode bel bij een kritieke melding (site v46), geen rand */
+.picon { position: relative; flex: none; width: 40px; height: 40px; }
+.bell { position: absolute; right: -7px; bottom: -7px; width: 22px; height: 22px; border-radius: 11px; background: var(--danger); box-shadow: 0 0 0 2px rgb(62,64,70); display: grid; place-items: center; color: #fff; }
+.kritiek { font-size: 12px; line-height: 16px; font-weight: 500; color: var(--text-2); }
+/* webpagina voor je contact */
+.webbar { margin: var(--space-8) var(--space-16) 0; height: 40px; border-radius: 12px; background: rgba(255,255,255,.12); display: grid; place-items: center; flex: none; color: var(--text); font-size: 16px; line-height: 24px; }
+/* alarmscherm */
+.alarm-body { flex: 1 0 auto; padding: var(--space-8) var(--space-24) var(--space-24); display: flex; flex-direction: column; gap: var(--space-8); }
+.alarm-body .held { flex: 1 1 auto; min-height: 120px; display: flex; align-items: center; justify-content: center; }
+.alarm-body .held + .card { margin-top: var(--space-16); }
+.cnt { font-variant-numeric: tabular-nums; }
+.check { width: 24px; height: 24px; border-radius: 12px; background: rgba(130,185,142,.18); color: var(--ok-t); display: grid; place-items: center; flex: none; }
+.drow.st { padding: var(--space-12) 0; }
+/* vergelijking abonnement */
+.cmp { display: grid; grid-template-columns: minmax(0, 1fr) 56px 56px; gap: var(--space-12) var(--space-8); align-items: center; }
+.cmp > span:nth-child(3n+2), .cmp > span:nth-child(3n) { display: grid; place-items: center; }
+/* tekst breekt zonder losse woorden */
+.t20, .tile .t16, .card .t16, .notif .t16, .skaart .wat { text-wrap: pretty; }
+/* grote kaart bovenaan een detailscherm, met eigen beeld */
+.hero { background: var(--surface); border-radius: 24px; padding: var(--space-20); display: flex; flex-direction: column; gap: var(--space-24); }
+.hero .txt { display: flex; flex-direction: column; gap: var(--space-8); }
+.hero .beeld { display: block; color: var(--text); }
+.faded { opacity: .35; }
+.skaart .temp.idle { color: var(--idle-t); }
+.notif .app { display: flex; justify-content: space-between; align-items: center; }
+/* lockscreen: acties na lang indrukken, als lijst onder de melding */
+.nacts { width: 100%; display: flex; flex-direction: column; gap: var(--seam); margin-top: var(--space-8); }
+.nact { padding: var(--space-12) var(--space-20); background: rgba(62,64,70,.86); -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px); font-size: 16px; line-height: 24px; text-align: left; color: var(--text); }
+.nact:first-child { border-radius: 24px 24px 0 0; } .nact:last-child { border-radius: 0 0 24px 24px; }
+
+/* ---------------------------------------------------------------- V14 · afwerking */
+/* iOS-rand: statusbalk en home-indicator (systeem, buiten de app-schaal) */
+.sbar { height: 47px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: var(--space-4) 28px 0 44px; font-size: 16px; font-weight: 500; letter-spacing: -0.01em; color: var(--text); }
+.sbar .ic { display: flex; gap: 6px; align-items: center; }
+.hind { height: 34px; flex: none; display: grid; place-items: center; }
+.hind::after { content: ""; width: 134px; height: 5px; border-radius: 3px; background: var(--text); opacity: .9; }
+.lock .sbar .tm { visibility: hidden; }
+/* statuskleur als stip, de tekst blijft neutraal */
+.vdot { display: inline-block; width: 8px; height: 8px; border-radius: 4px; margin-right: var(--space-8); vertical-align: 2px; flex: none; }
+.vdot.danger { background: var(--danger-t); } .vdot.warn { background: var(--warn-t); } .vdot.ok { background: var(--ok-t); } .vdot.idle { background: var(--idle-t); }
+.banner .vdot { margin-right: 0; vertical-align: 0; }
+/* teller tot je contacten een sms krijgen */
+.tbar { height: 4px; border-radius: 2px; background: var(--key); overflow: hidden; }
+.tbar i { display: block; height: 100%; border-radius: 2px; background: var(--text); }
+.cntbox { display: flex; flex-direction: column; gap: var(--space-8); }
+/* adresblok op de pagina van je contact */
+.adres { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-16) var(--space-20); border-radius: 24px; background: var(--surface-2); }
+/* kop van een alarmscherm: het voertuig klein in het midden, zoals een navigatiebalk */
+.kop .kopt { flex: 1; text-align: center; }
+/* V12 Figma: tegeltitel medium, waarde wit op Home en grijs in een alarm; tekstknop in een kaart even hoog als een knop */
+.tile > .t16:first-child { font-weight: 500; }
+.val { color: var(--text); }
+.card .txtbtn { width: 100%; min-height: 56px; }
+/* een losse laatste tegel wordt breed */
+.tiles > .tile:last-child:nth-child(odd) { grid-column: 1 / -1; }
+.emb.sm { height: 200px; } .emb.sm img { width: 285px; height: 200px; }
+/* alarm: de eerste kaart krijgt een dunne lijn in zacht rood (onderzoek V14: hooguit een lijn, nooit een rood vlak) */
+.alarm-body.al-danger > .card { box-shadow: inset 0 0 0 1px rgba(242,149,139,.32); }
+.alarm-body.al-warn > .card { box-shadow: inset 0 0 0 1px rgba(240,182,90,.28); }
+/* V14 eindreview */
+.pill.red { color: #fff; }
+.vrow { display: flex; gap: var(--space-8); align-items: flex-start; }
+.vrow .vdot { margin: var(--space-8) 0 0; vertical-align: 0; }
+.tb p, .hero .t16 { text-wrap: pretty; }
+.drow .spin { margin: var(--space-4); }
+.oring { width: 24px; height: 24px; border-radius: 12px; border: 1.5px solid var(--line-2); flex: none; }
+.clip .cntl { position: absolute; right: 20px; top: 56px; color: var(--on-btn); }
+.illus .spot { transition: cx .3s ease, cy .3s ease; }
+/* V14 · beelden uit Figma (VanMoof), vierkant met de kaartradius, zoals V12 */
+.beeld { position: relative; width: 100%; aspect-ratio: 1 / 1; max-width: 100%; flex: none; border-radius: 24px; overflow: hidden; background: #08090b; }
+.beeld img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.beeld > a { position: absolute; inset: 0; display: block; }
+.beeld .cnt, .beeld .cntl { color: var(--text); z-index: 3; }
+/* de sticker op de plek waar Ember straks zit (gemeten in de foto Ember zit vast) */
+.stk { position: absolute; left: 48.4%; top: 59.9%; width: 14.7%; height: 37.3%; transform: translate(-50%, -50%) rotate(-15.5deg); border-radius: 12px; background: linear-gradient(165deg, #eceef1 0%, #cfd2d8 70%, #b9bcc3 100%); box-shadow: 0 2px 8px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.7); z-index: 2; }
+/* de fiets over de volle breedte, met de plek van de accu */
+.fotowrap { margin: 0 -24px; }
+.foto { position: relative; display: block; width: 100%; }
+.foto img { display: block; width: 100%; height: auto; }
+.foto .hot { position: absolute; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 8px; background: var(--ok-t); box-shadow: 0 0 0 4px rgba(150,197,160,.28), 0 0 0 10px rgba(150,197,160,.12); transition: left .35s ease, top .35s ease; }
+.beeld .cntl { position: absolute; right: 20px; top: 56px; }
+/* V14 · pagina's achter de tegels: kaart bovenaan met eigen beeld, kerncijfers als compacte tegels, lijsten in groepen */
+.hero .hrow { display: flex; gap: var(--space-16); align-items: center; }
+.hero .hrow .txt { flex: 1; min-width: 0; }
+.hero .beeld2 { flex: none; display: grid; place-items: center; color: var(--text); }
+.efoto { display: block; width: 84px; height: 112px; border-radius: 16px; object-fit: cover; }
+.vdot.big { width: 16px; height: 16px; border-radius: 8px; margin: 0; box-shadow: 0 0 0 8px rgba(150,197,160,.16); }
+.stats { display: grid; gap: var(--space-8); }
+.stats.c2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.stats.c3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.stat { background: var(--surface); border-radius: 24px; padding: var(--space-16); display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+.stat .sval { display: flex; align-items: center; gap: var(--space-8); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.stat .sval .vdot { margin: 0; }
+.batbar { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: var(--space-4); }
+.batbar i { display: block; height: 8px; border-radius: 4px; background: var(--key); }
+.batbar i.on { background: var(--ok); }
+.band { display: flex; flex-direction: column; gap: var(--space-8); }
+.band .track { position: relative; height: 8px; border-radius: 4px; background: var(--key); }
+.band .zone { position: absolute; top: 0; bottom: 0; border-radius: 4px; background: rgba(150,197,160,.55); }
+.band .now { position: absolute; top: -4px; width: 16px; height: 16px; margin-left: -8px; border-radius: 8px; background: var(--text); box-shadow: 0 0 0 4px rgba(245,245,247,.16); }
+.band .bl { display: flex; justify-content: space-between; gap: var(--space-8); }
+/* lockscreen zoals de push op de site: een rustige achtergrond met wat licht van boven */
+.lock { background: radial-gradient(120% 70% at 50% 0%, #3a3c42 0%, #1e1f23 55%, #121315 100%); }
+.lock .notif .t16.m { line-height: 24px; }
+/* de levende zwerm klein in de kaart bovenaan een tegelpagina */
+.hero .beeld2 .held { width: 96px; height: 96px; }
+a.card { color: inherit; }
+
+/* V15 · waar zit de accu: een kleine fiets met de plek, zoals V12 */
+.foto.thumb { width: 64px; height: auto; margin-top: var(--space-4); }
+.foto.thumb .hot { width: 6px; height: 6px; margin: -3px 0 0 -3px; box-shadow: 0 0 0 2px rgba(150,197,160,.3); }
+.group .row .grow .thumb { display: block; }
+/* V15 · rode flow: de regel over je contacten is rustige tekst; statustegels zijn omlijnd, actietegels gevuld */
+.card .rustig { margin: 0; }
+.alarm-body .tile.low { background: none; box-shadow: inset 0 0 0 1px rgba(255,255,255,.1); }
+
+/* V17 · een titel na een beeld staat onderaan, boven de knop (zoals V12); het beeld staat in het midden van de ruimte erboven */
+.body > :is(.emb, .held):first-child:not(:last-child) { margin-top: auto; }
+.body > :is(.emb, .held, .beeld, .clip) ~ .tb { margin-top: auto; }
+.body > :is(.emb, .held, .beeld, .clip) ~ .tb.onder { margin-top: 0; }   /* V21: Druk de sticker aan, de tekst hoort bij de foto */
+/* V17 · de soorten meldingen, zoals V12: stip, titel, uitleg en een label */
+.lvls .lvl { align-items: flex-start; }
+.lvls .lvl .vdot { margin-top: var(--space-8); flex: none; }
+.lvls .lvl .grow { gap: var(--space-4); }
+.tag { padding: var(--space-4) var(--space-8); border-radius: 8px; background: var(--surface-2); color: var(--text-2); flex: none; }
+/* V17 · genummerde stappen in een kaart */
+.num-c { width: 24px; height: 24px; border-radius: 12px; background: var(--surface-2); color: var(--text-2); display: grid; place-items: center; flex: none; }
+
+/* V18 · tegelpagina's: bovenaan geen grote tegels. De waarde staat als kop op de pagina, de cijfers staan in een lijst */
+.hero { background: none; border-radius: 0; padding: 0; gap: var(--space-16); }
+.hero .hrow { align-items: flex-start; }
+.stats, .stats.c2, .stats.c3 { display: flex; flex-direction: column; gap: var(--seam); }
+.stat { background: var(--surface); border-radius: 0; padding: var(--space-20); display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--space-12); row-gap: var(--space-4); align-items: center; }
+.stats > .stat:first-child { border-radius: 24px 24px 0 0; }
+.stats > .stat:last-child { border-radius: 0 0 24px 24px; }
+.stats > .stat:only-child { border-radius: 24px; }
+.stat > .t12:first-child { grid-column: 1; grid-row: 1 / span 2; font-size: 16px; line-height: 24px; color: var(--text); }
+.stat > .sval { grid-column: 2; grid-row: 1; justify-self: end; font-size: 16px; line-height: 24px; color: var(--text-2); }
+.stat > .t12:not(:first-child) { grid-column: 2; grid-row: 2; justify-self: end; }
+
+/* ---------------------------------------------------------------- V19 · rode flow: rustiger en volgens de flow
+   Elk alarmscherm heeft dezelfde opbouw: de zwerm op een vaste plek bovenaan, één kaart met wat je nu doet,
+   de uitwegen als rijen (Ik zie rook, Ik ben niet in de buurt). Geen tijdlijn onderin (V20).
+   Geen rode rand om de kaart en geen rode stippen: rood alleen in de zwerm, het statuswoord en de knop Contact 112. */
+.alarm-body.v19 { gap: 0; padding-top: 0; }
+.alarm-body.v19 > .held { position: relative; flex: 1 1 auto; height: auto; min-height: 200px; margin: 0 0 var(--space-16); }
+/* de zwerm is even groot als op Home (300 hoog); alleen op een vol scherm zo groot als past. Hij staat midden in de vrije ruimte */
+.alarm-body.v19 > .held > a { position: absolute; inset: 0; height: auto; }
+.alarm-body.v19 > .held .zwh { position: absolute; left: 0; right: 0; top: -24px; bottom: -8px; height: auto; max-height: 300px; margin: auto 0; }
+.alarm-body.v19.al-danger > .card, .alarm-body.v19.al-warn > .card { box-shadow: none; }
+.alarm-body.v19 > .adres + .card { margin-top: var(--space-8); }
+.alarm-body.v19 > .card + .uitweg { margin-top: var(--space-8); }
+.alarm-body.v19.web > .t16.m { margin-top: var(--space-16); }
+.alarm-body.v19.web > .held { min-height: 168px; }
+.alarm-body.v19.web > .held .zwh { max-height: 152px; top: 0; bottom: 0; }
+/* V21: de uitwegen zijn gewone rijen van 64 hoog (maat/rij), zoals in elke andere lijst (waren 56) */
+
+/* ---------------------------------------------------------------- V20 · feedback 27 okt (avond) */
+/* de tab Dag: een echte pil, 28 hoog, de tekst in het midden (V12: Tab · Dag, radius 999) */
+.tab { display: inline-flex; align-items: center; justify-content: center; height: 28px; padding: 0 var(--space-12); border-radius: 24px; }
+/* de statuskaart op Home: de temperatuur op de lijn van de titel */
+.skaart .regel { align-items: baseline; }
+/* een melding in Meldingen: geen app-icoon, een stip in de statuskleur, de tijd op dezelfde regel */
+.card.melding { gap: var(--space-4); }
+.melding .mkop { display: flex; align-items: center; gap: var(--space-8); }
+.melding .mkop .vdot { margin: 0; }
+.melding .mkop .t16 { flex: 1; min-width: 0; }
+/* Te doen in Meldingen: wat eerst bovenaan Home stond */
+.row.todo .grow { gap: var(--space-4); }
+/* Zo waarschuwen we je staat over drie pagina's (O27, O27w, O27r), elk met de zwerm in die status (V20) */
+/* Ember gaat aan: heel Ember (het 3D-beeld van de site), zo hoog als past */
+.emb.full { flex: 1 1 auto; height: auto; min-height: 360px; }
+/* het testalarm: de regel onder een vinkje komt pas als hij is afgevinkt */
+.dlist.live .drow .grow .t12 { transition: opacity .3s ease; }
+.dlist.live .drow:has(.spin) .grow .t12 { opacity: 0; }
+/* hoekradius (27 okt): knoppen 32, chips en de tabs Dag/Week/Maand 24, vlakken 24 */
